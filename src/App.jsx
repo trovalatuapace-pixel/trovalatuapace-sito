@@ -1,41 +1,59 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { supabase } from './lib/supabase.js'
+import Auth from './components/Auth.jsx'
+import Paywall from './components/Paywall.jsx'
 import ChatPanel from './components/ChatPanel.jsx'
 import Breathing from './components/Breathing.jsx'
 import Journal from './components/Journal.jsx'
 
 export default function App() {
-  const [screen, setScreen] = useState('landing') // landing | app
-  const [tab, setTab] = useState('chat') // chat | respiro | diario
+  const [session, setSession] = useState(undefined) // undefined = loading, null = no session
+  const [subStatus, setSubStatus] = useState(undefined) // undefined = loading, {active:bool}
+  const [tab, setTab] = useState('chat')
 
-  if (screen === 'landing') {
-    return (
-      <div className="app-shell">
-        <div className="landing">
-          <div className="eyebrow">Trova la tua pace</div>
-          <h1>Un momento tutto tuo,<br />ogni giorno.</h1>
-          <p className="lead">
-            Scrivi quello che senti, respira con calma, osserva il tuo andamento
-            nel tempo. Un compagno di benessere emotivo pensato per accompagnarti
-            nella quotidianità.
-          </p>
-          <button className="cta-primary" onClick={() => setScreen('app')}>
-            Inizia ora →
-          </button>
-          <p className="disclaimer">
-            Trova la tua pace è uno strumento di supporto per il benessere
-            quotidiano. Non è un servizio psicologico o medico e non sostituisce
-            un professionista. In caso di crisi o pensieri di farsi del male,
-            contatta subito il 112 o il Telefono Amico Italia (02 2327 2327).
-          </p>
-        </div>
-      </div>
-    )
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession)
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    if (!session) {
+      setSubStatus(session === null ? null : undefined)
+      return
+    }
+    let cancelled = false
+    fetch('/api/check-subscription', {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (!cancelled) setSubStatus(data) })
+      .catch(() => { if (!cancelled) setSubStatus({ active: false }) })
+    return () => { cancelled = true }
+  }, [session])
+
+  if (session === undefined) {
+    return <div className="app-shell loading-shell" />
+  }
+
+  if (!session) {
+    return <Auth onAuthed={() => {}} />
+  }
+
+  if (subStatus === undefined) {
+    return <div className="app-shell loading-shell" />
+  }
+
+  if (!subStatus.active) {
+    return <Paywall userEmail={session.user.email} />
   }
 
   return (
     <div className="app-shell">
       <div className="top-nav">
-        <button className="back" onClick={() => setScreen('landing')}>← Home</button>
+        <button className="back" onClick={() => supabase.auth.signOut()}>Esci</button>
         <div className="brand">Trova la tua pace</div>
         <div style={{ width: 52 }} />
       </div>
@@ -45,9 +63,9 @@ export default function App() {
         <button className={tab === 'diario' ? 'active' : ''} onClick={() => setTab('diario')}>Diario</button>
       </div>
       <div className="view">
-        {tab === 'chat' && <ChatPanel />}
+        {tab === 'chat' && <ChatPanel session={session} />}
         {tab === 'respiro' && <Breathing />}
-        {tab === 'diario' && <Journal />}
+        {tab === 'diario' && <Journal session={session} />}
       </div>
     </div>
   )
