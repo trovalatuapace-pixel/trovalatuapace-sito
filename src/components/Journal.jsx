@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase.js'
 
-const STORAGE_KEY = 'ttp_journal_entries_v1'
 const MOODS = [
   { value: 1, emoji: '😔' },
   { value: 2, emoji: '😕' },
@@ -9,46 +9,39 @@ const MOODS = [
   { value: 5, emoji: '😄' },
 ]
 
-function loadEntries() {
-  if (typeof window === 'undefined') return []
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function saveEntries(entries) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
-  } catch {
-    // storage unavailable, entries stay in-memory for this session
-  }
-}
-
-export default function Journal() {
+export default function Journal({ session }) {
   const [entries, setEntries] = useState([])
   const [mood, setMood] = useState(null)
   const [text, setText] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setEntries(loadEntries())
+    loadEntries()
   }, [])
 
-  function handleSave() {
+  async function loadEntries() {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100)
+    if (!error && data) setEntries(data)
+    setLoading(false)
+  }
+
+  async function handleSave() {
     if (!mood && !text.trim()) return
-    const entry = {
-      id: Date.now(),
-      date: new Date().toISOString(),
+    const { error } = await supabase.from('journal_entries').insert({
+      user_id: session.user.id,
       mood: mood || 3,
-      text: text.trim(),
+      entry_text: text.trim(),
+    })
+    if (!error) {
+      setMood(null)
+      setText('')
+      loadEntries()
     }
-    const next = [entry, ...entries]
-    setEntries(next)
-    saveEntries(next)
-    setMood(null)
-    setText('')
   }
 
   const trend = [...entries].slice(0, 14).reverse()
@@ -88,19 +81,21 @@ export default function Journal() {
       )}
 
       <div className="entry-list">
-        {entries.length === 0 && (
+        {loading && <div className="empty-state">Caricamento...</div>}
+        {!loading && entries.length === 0 && (
           <div className="empty-state">Non hai ancora nessuna voce. Inizia da qui sopra.</div>
         )}
         {entries.map(e => (
           <div key={e.id} className="entry-card">
             <div className="entry-top">
-              <span>{new Date(e.date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+              <span>{new Date(e.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
               <span>{MOODS.find(m => m.value === e.mood)?.emoji}</span>
             </div>
-            {e.text && <p>{e.text}</p>}
+            {e.entry_text && <p>{e.entry_text}</p>}
           </div>
         ))}
       </div>
     </div>
   )
 }
+ 
