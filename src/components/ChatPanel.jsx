@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 
 const WELCOME = "Ciao. Sono qui per ascoltarti, senza fretta. Cosa ti va di raccontarmi oggi?"
 
-export default function ChatPanel() {
+export default function ChatPanel({ session }) {
   const [messages, setMessages] = useState([{ role: 'assistant', content: WELCOME }])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -22,7 +22,10 @@ export default function ChatPanel() {
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({ messages: next.map(m => ({ role: m.role, content: m.content })) })
       })
       const data = await res.json()
@@ -66,3 +69,4 @@ export default function ChatPanel() {
     </div>
   )
 }
+
