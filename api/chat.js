@@ -1,3 +1,11 @@
+
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+)
+
 const SYSTEM_PROMPT = `Sei "Sara", il compagno di benessere emotivo di Trova la tua pace.
 
 CHI SEI:
@@ -23,6 +31,31 @@ Per tutto il resto: ascolta con presenza, fai una domanda alla volta, e quando Ã
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Metodo non consentito' })
+    return
+  }
+
+  const authHeader = req.headers.authorization || ''
+  const token = authHeader.replace('Bearer ', '')
+  if (!token) {
+    res.status(401).json({ error: 'Non autenticata' })
+    return
+  }
+
+  const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token)
+  if (userError || !userData?.user) {
+    res.status(401).json({ error: 'Sessione non valida' })
+    return
+  }
+
+  const { data: sub } = await supabaseAdmin
+    .from('subscribers')
+    .select('status')
+    .eq('user_id', userData.user.id)
+    .maybeSingle()
+
+  const activeStatuses = ['trialing', 'active']
+  if (!sub || !activeStatuses.includes(sub.status)) {
+    res.status(403).json({ error: 'Abbonamento non attivo' })
     return
   }
 
