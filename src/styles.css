@@ -383,3 +383,119 @@ button {
   font-size: 13.5px;
   padding: 30px 10px;
 }
+
+/* ---------- Auth & Paywall ---------- */
+.loading-shell {
+  min-height: 100vh;
+  background: var(--ink);
+}
+
+.auth-view {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(120% 90% at 15% 0%, rgba(217,160,91,0.16), transparent 55%),
+    var(--ink);
+}
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+.auth-card .eyebrow {
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 14px;
+}
+.auth-card h2 {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 28px;
+  margin: 0 0 24px;
+}
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.auth-card input {
+  background: rgba(244,238,227,0.06);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--sand);
+  padding: 14px 16px;
+  font-size: 15px;
+  font-family: inherit;
+}
+.auth-card button[type="submit"] {
+  background: var(--amber);
+  border: none;
+  color: var(--ink-deep);
+  border-radius: 100px;
+  padding: 14px;
+  font-weight: 600;
+  font-size: 15px;
+  margin-top: 4px;
+}
+.auth-switch {
+  background: none;
+  border: none;
+  color: var(--sand-dim);
+  font-size: 13.5px;
+  margin-top: 20px;
+  text-decoration: underline;
+}
+.auth-error {
+  color: #e8968a;
+  font-size: 13px;
+  text-align: left;
+}
+.auth-notice {
+  color: var(--amber-soft);
+  font-size: 13px;
+  text-align: left;
+}
+
+.paywall-view {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  text-align: center;
+  background: var(--ink);
+}
+.paywall-view h2 {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 30px;
+  margin: 4px 0 12px;
+}
+.paywall-lead {
+  color: var(--sand-dim);
+  font-size: 15px;
+  max-width: 32ch;
+  margin: 0 0 24px;
+}
+.paywall-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14.5px;
+  color: var(--sand);
+}
+.paywall-features li::before {
+  content: "✓ ";
+  color: var(--amber);
+}
