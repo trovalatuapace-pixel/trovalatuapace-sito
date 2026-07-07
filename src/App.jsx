@@ -5,11 +5,14 @@ import Paywall from './components/Paywall.jsx'
 import ChatPanel from './components/ChatPanel.jsx'
 import Breathing from './components/Breathing.jsx'
 import Journal from './components/Journal.jsx'
+import LegalPage from './components/LegalPage.jsx'
+import LegalFooter from './components/LegalFooter.jsx'
 
 export default function App() {
   const [session, setSession] = useState(undefined) // undefined = loading, null = no session
   const [subStatus, setSubStatus] = useState(undefined) // undefined = loading, {active:bool}
   const [tab, setTab] = useState('chat')
+  const [legalPage, setLegalPage] = useState(null) // null | 'privacy' | 'termini' | 'cookie'
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
@@ -34,12 +37,16 @@ export default function App() {
     return () => { cancelled = true }
   }, [session])
 
+  if (legalPage) {
+    return <LegalPage page={legalPage} onBack={() => setLegalPage(null)} />
+  }
+
   if (session === undefined) {
     return <div className="app-shell loading-shell" />
   }
 
   if (!session) {
-    return <Auth onAuthed={() => {}} />
+    return <Auth onAuthed={() => {}} onShowLegal={setLegalPage} />
   }
 
   if (subStatus === undefined) {
@@ -47,7 +54,7 @@ export default function App() {
   }
 
   if (!subStatus.active) {
-    return <Paywall userEmail={session.user.email} />
+    return <Paywall userEmail={session.user.email} onShowLegal={setLegalPage} />
   }
 
   return (
@@ -67,6 +74,7 @@ export default function App() {
         {tab === 'respiro' && <Breathing />}
         {tab === 'diario' && <Journal session={session} />}
       </div>
+      <LegalFooter onShowLegal={setLegalPage} />
     </div>
   )
 }

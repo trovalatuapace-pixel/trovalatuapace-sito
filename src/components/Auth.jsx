@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
+import LegalFooter from './LegalFooter.jsx'
 
-export default function Auth({ onAuthed }) {
+export default function Auth({ onAuthed, onShowLegal }) {
   const [mode, setMode] = useState('login') // login | signup
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -67,7 +68,13 @@ export default function Auth({ onAuthed }) {
         >
           {mode === 'login' ? 'Non hai un account? Registrati' : 'Hai già un account? Accedi'}
         </button>
+        {mode === 'signup' && (
+          <p className="disclaimer">
+            Registrandoti accetti i Termini di Servizio e l'Informativa sulla Privacy.
+          </p>
+        )}
       </div>
+      <LegalFooter onShowLegal={onShowLegal} />
     </div>
   )
 }

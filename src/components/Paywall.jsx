@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
+import LegalFooter from './LegalFooter.jsx'
 
-export default function Paywall({ userEmail }) {
+export default function Paywall({ userEmail, onShowLegal }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -52,7 +53,11 @@ export default function Paywall({ userEmail }) {
       <button className="cta-primary" onClick={startCheckout} disabled={loading}>
         {loading ? '...' : 'Inizia i 3 giorni gratuiti'}
       </button>
+      <p className="disclaimer">
+        Proseguendo accetti i Termini di Servizio e l'Informativa sulla Privacy.
+      </p>
       <button className="auth-switch" onClick={logout}>Esci</button>
+      <LegalFooter onShowLegal={onShowLegal} />
     </div>
   )
 }
